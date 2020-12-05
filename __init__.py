@@ -19,12 +19,14 @@ if "bpy" in locals():
     importlib.reload(material)
     importlib.reload(generate)
     importlib.reload(engine_settings)
+    importlib.reload(properties)
 else:
     import bpy
     from . import ui
     from . import material
     from . import generate
     from . import engine_settings
+    from . import properties
 
 
 
@@ -34,6 +36,7 @@ def register():
     material.register()
     generate.register()
     engine_settings.register()
+    properties.register()
 
 
 
@@ -43,6 +46,7 @@ def unregister():
     material.unregister()
     generate.unregister()
     engine_settings.unregister()
+    properties.unregister()
 
 
 

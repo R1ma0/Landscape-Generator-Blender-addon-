@@ -21,13 +21,14 @@ class GenerateLandscape(bpy.types.Operator):
     def execute(self, context):
         """Generates terrain depending on the selected type"""
         # Enum with landscape types
-        terrain = context.scene.terrain_type
+        terrain = context.scene.my_tool.terrain_type
         # List of material nodes
         node_tree = bpy.data.materials["Landscape"].node_tree
         
+        generate_position(node_tree)
+
         # Plain generation
         if terrain == "PLAIN":
-            generate_position(node_tree)
             # Scale
             node_tree.nodes["TG_DisplacementNode"].inputs['Scale'].default_value = random.uniform(0.05, 0.1)
             # Pos
@@ -36,27 +37,72 @@ class GenerateLandscape(bpy.types.Operator):
             node_tree.nodes["TG_NoiseTextureNode"].inputs[4].default_value = random.uniform(0.0, 0.5)
             # Distortion
             node_tree.nodes["TG_NoiseTextureNode"].inputs[5].default_value = random.uniform(-0.8, 0.8)
-        elif terrain == "PLAIN_WATER":
-            generate_position(node_tree)           
+        elif terrain == "PLAIN_WATER":  
+                     
             node_tree.nodes["TG_DisplacementNode"].inputs['Scale'].default_value = random.uniform(0.05, 0.10)
             node_tree.nodes["TG_ColorRamp"].color_ramp.elements[0].position = random.uniform(0.35, 0.5)
             node_tree.nodes["TG_NoiseTextureNode"].inputs[4].default_value = random.uniform(0.0, 0.5)
             node_tree.nodes["TG_NoiseTextureNode"].inputs[5].default_value = random.uniform(-0.8, 0.8)
         elif terrain == "MOUNTAINS":
-            generate_position(node_tree)
+            
             node_tree.nodes["TG_DisplacementNode"].inputs['Scale'].default_value = random.uniform(0.2, 0.4)
             node_tree.nodes["TG_ColorRamp"].color_ramp.elements[0].position = random.uniform(0.0, 0.2)
             node_tree.nodes["TG_NoiseTextureNode"].inputs[4].default_value = random.uniform(0.0, 0.5)
             node_tree.nodes["TG_NoiseTextureNode"].inputs[5].default_value = random.uniform(-0.8, 0.8)
         elif terrain == "ISLANDS":
-            generate_position(node_tree)
+            
             node_tree.nodes["TG_DisplacementNode"].inputs['Scale'].default_value = random.uniform(0.1, 0.25)
             node_tree.nodes["TG_ColorRamp"].color_ramp.elements[0].position = random.uniform(0.5, 0.65)
             node_tree.nodes["TG_NoiseTextureNode"].inputs[4].default_value = random.uniform(0.0, 0.5)
             node_tree.nodes["TG_NoiseTextureNode"].inputs[5].default_value = random.uniform(-0.8, 0.8)
+        elif terrain == "CUSTOM":
+            
+            min = context.scene.my_tool.displacement_scale_min
+            max = context.scene.my_tool.displacement_scale_max
+            node_tree.nodes["TG_DisplacementNode"].inputs['Scale'].default_value = random.uniform(min, max)
+            
+            min = context.scene.my_tool.colorRamp_pos_min
+            max = context.scene.my_tool.colorRamp_pos_max
+            node_tree.nodes["TG_ColorRamp"].color_ramp.elements[0].position = random.uniform(min, max)
+            
+            min = context.scene.my_tool.noise_texture_roughness_min
+            max = context.scene.my_tool.noise_texture_roughness_max
+            node_tree.nodes["TG_NoiseTextureNode"].inputs[4].default_value = random.uniform(min, max)
+            
+            min = context.scene.my_tool.noise_texture_distortion_min
+            max = context.scene.my_tool.noise_texture_distortion_max
+            node_tree.nodes["TG_NoiseTextureNode"].inputs[5].default_value = random.uniform(min, max)
         else:
             pass
+        
+        context.scene.my_tool.displacement_scale_current = node_tree.nodes["TG_DisplacementNode"].inputs['Scale'].default_value
+        context.scene.my_tool.colorRamp_pos_current = node_tree.nodes["TG_ColorRamp"].color_ramp.elements[0].position
+        context.scene.my_tool.noise_texture_roughness_current = node_tree.nodes["TG_NoiseTextureNode"].inputs[4].default_value
+        context.scene.my_tool.noise_texture_distortion_current = node_tree.nodes["TG_NoiseTextureNode"].inputs[5].default_value
 
+        return {'FINISHED'}
+
+
+
+class RefreshLandscape(bpy.types.Operator):
+    """Updating Terrain Values"""
+    bl_idname = "mesh.refresh_landscape"
+    bl_label = "Refresh"
+    
+    @classmethod
+    def description(cls, context, properties):
+        """Tooltip for a button"""
+        return "Update the values of the current variant"
+    
+    def execute(self, context):
+        node_tree = bpy.data.materials["Landscape"].node_tree
+        prop = context.scene.my_tool
+        
+        node_tree.nodes["TG_DisplacementNode"].inputs['Scale'].default_value = prop.displacement_scale_current
+        node_tree.nodes["TG_ColorRamp"].color_ramp.elements[0].position = prop.colorRamp_pos_current
+        node_tree.nodes["TG_NoiseTextureNode"].inputs[4].default_value = prop.noise_texture_roughness_current
+        node_tree.nodes["TG_NoiseTextureNode"].inputs[5].default_value = prop.noise_texture_distortion_current
+        
         return {'FINISHED'}
 
 
@@ -85,13 +131,10 @@ def generate_position(node_tree):
     
 def register():
     bpy.utils.register_class(GenerateLandscape)
+    bpy.utils.register_class(RefreshLandscape)
     
     
     
 def unregister():
     bpy.utils.unregister_class(GenerateLandscape)
-    
-    
-    
-# if __name__ == "__main__":
-#     register()
+    bpy.utils.unregister_class(RefreshLandscape)

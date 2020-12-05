@@ -31,8 +31,3 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(EngineSettings)
-    
-
-    
-# if __name__ == "__main__":
-#     register()

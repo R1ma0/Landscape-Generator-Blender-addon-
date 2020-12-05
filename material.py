@@ -127,8 +127,3 @@ def register():
     
 def unregister():
     bpy.utils.unregister_class(MaterialSettings)
-    
-    
-    
-if __name__ == "__main__":
-    register()
